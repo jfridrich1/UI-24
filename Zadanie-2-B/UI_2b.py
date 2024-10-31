@@ -1,4 +1,5 @@
 import tkinter as tk
+import numpy as np
 import random
 
 MAX_X, MAX_Y=5000,5000
@@ -58,14 +59,20 @@ def generate_more(arr, count,radius,scale):
     canvas.create_oval(coord_x-radius,coord_y-radius,coord_x+radius,coord_y+radius, fill="red", outline="")
     return new
 
+
 def kmeans_centroid():
     pass
-def kmeans_medoid(arr, k):
+
+
+def kmeans_medoid(arr, k, radius, scale):
     medoids_id=random.sample(arr,k)
     print(medoids_id)
     for i in range(k):
         print(i)
-        canvas.create_oval((medoids_id[i][0]//10)+500-5,(medoids_id[i][1]//10)+500-5,(medoids_id[i][0]//10)+500+5,(medoids_id[i][1]//10)+500+5, width=5)
+        coord_x=(medoids_id[i][0]//scale)+250+50   #+50 kvoli okraju
+        coord_y=(medoids_id[i][1]//scale)+250+50
+        canvas.create_oval(coord_x-radius,coord_y-radius,coord_x+radius,coord_y+radius, width=5)
+    return medoids_id
 
 def div_cluster():
     pass
@@ -74,7 +81,8 @@ def div_cluster():
 
 
 init_20(array_ran_sur,radius,scaling_down);
-for count in range(10000):
+for count in range(40000):
     print(generate_more(array_ran_sur, count+1,radius,scaling_down))
-kmeans_medoid(array_ran_sur, 5)
+
+kmeans_medoid(array_ran_sur,10,radius,scaling_down)
 root.mainloop();
