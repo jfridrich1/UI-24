@@ -2,9 +2,6 @@ import tkinter as tk
 import numpy as np
 import random
 
-MAX_X, MAX_Y=5000,5000
-MIN_X, MIN_X=-5000,-5000
-
 root=tk.Tk()
 max_x_can,max_y_can=600,600;
 canvas=tk.Canvas(root, width=max_x_can, height=max_y_can);
@@ -12,19 +9,22 @@ canvas.pack()
 
 canvas.create_rectangle(50,50,550,550);
 
+MAX_X, MAX_Y=5000,5000
+MIN_X, MIN_Y=-5000,-5000
 
 array_ran_sur=[]
-num_points=20
+num_points=2000
 num_clus=5
 radius=1
 scaling_down=20
-distances=np.zeros((40, 5))
+distances=np.zeros((num_points+20, 5))
 
 
 def init_20(array,radius,scale):
+    global MAX_X,MAX_Y,MIN_X,MIN_Y
     for i in range(20):
-        ran_x=random.randrange(-5000,5000)
-        ran_y=random.randrange(-5000,5000)
+        ran_x=random.randrange(MIN_X,MAX_X)
+        ran_y=random.randrange(MIN_Y,MAX_Y)
         ran_sur=[ran_x,ran_y]
         array.append(ran_sur)
 
@@ -61,7 +61,7 @@ def generate_more(arr, count,radius,scale):
     coord_x=(new[0]//scale)+250+50   #+50 kvoli okraju
     coord_y=(new[1]//scale)+250+50
 
-    canvas.create_oval(coord_x-radius,coord_y-radius,coord_x+radius,coord_y+radius, fill="red", outline="")
+    canvas.create_oval(coord_x-radius,coord_y-radius,coord_x+radius,coord_y+radius, fill="black", outline="")
     return new
 
 
@@ -77,20 +77,34 @@ def kmeans_medoid(arr, k, radius, scale,medoids_id):
     for i in range(k):
         coord_x=(medoids_sample[i][0]//scale)+250+50   #+50 kvoli okraju
         coord_y=(medoids_sample[i][1]//scale)+250+50
-        canvas.create_oval(coord_x-radius,coord_y-radius,coord_x+radius,coord_y+radius, width=5)
+        canvas.create_oval(coord_x-radius,coord_y-radius,coord_x+radius,coord_y+radius, width=5, outline="#24fc03")
 
 def dist_calc(distances, array_m, array_points):
     print(len(array_points))
     print(len(array_m))
+
     for i in range(len(array_points)):
         for j in range(len(array_m)):
             medoid=np.array([array_m[j][0],array_m[j][1]])
             point=np.array([array_points[i][0],array_points[i][1]])
-            print("--------------------")
-            print(array_points[i])
-            print(array_m[j])
+            #print("--------------------")
+            #print(array_points[i])
+            #print(array_m[j])
             distances[i,j]=round(np.linalg.norm(medoid-point),2)
-            print(distances[i,j])
+            #print(distances[i,j])
+
+def clustering(distances, clusters, array):
+    prirad=np.argmin(distances, axis=1)
+    priradenie_zoznam=prirad.tolist()
+    #print(priradenie_zoznam)
+    #print(array)
+    for point_index, cluster_index in enumerate(priradenie_zoznam):
+        #print(point_index, array[point_index])
+        clusters[cluster_index].append(array[point_index])
+    #print(clusters[0])
+
+def update_med(array):
+    pass
 
 def div_cluster():
     pass
@@ -104,6 +118,10 @@ for count in range(num_points):
 num_points+=20
 
 medoids_id=[]
+clusters=[[] for _ in range(5)]
 kmeans_medoid(array_ran_sur,num_clus,radius,scaling_down,medoids_id)
 dist_calc(distances, medoids_id, array_ran_sur)
+clustering(distances,clusters,array_ran_sur)
+
+
 root.mainloop();
