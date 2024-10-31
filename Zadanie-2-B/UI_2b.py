@@ -12,9 +12,14 @@ canvas.pack()
 
 canvas.create_rectangle(50,50,550,550);
 
+
 array_ran_sur=[]
+num_points=20
+num_clus=5
 radius=1
 scaling_down=20
+distances=np.zeros((40, 5))
+
 
 def init_20(array,radius,scale):
     for i in range(20):
@@ -64,15 +69,28 @@ def kmeans_centroid():
     pass
 
 
-def kmeans_medoid(arr, k, radius, scale):
-    medoids_id=random.sample(arr,k)
-    print(medoids_id)
+def kmeans_medoid(arr, k, radius, scale,medoids_id):
+    medoids_sample=random.sample(arr,k)
+    for num in range(k):
+        medoids_id.append(medoids_sample[num])
+    print(f"zoznam medoidov: {medoids_id}")
     for i in range(k):
-        print(i)
-        coord_x=(medoids_id[i][0]//scale)+250+50   #+50 kvoli okraju
-        coord_y=(medoids_id[i][1]//scale)+250+50
+        coord_x=(medoids_sample[i][0]//scale)+250+50   #+50 kvoli okraju
+        coord_y=(medoids_sample[i][1]//scale)+250+50
         canvas.create_oval(coord_x-radius,coord_y-radius,coord_x+radius,coord_y+radius, width=5)
-    return medoids_id
+
+def dist_calc(distances, array_m, array_points):
+    print(len(array_points))
+    print(len(array_m))
+    for i in range(len(array_points)):
+        for j in range(len(array_m)):
+            medoid=np.array([array_m[j][0],array_m[j][1]])
+            point=np.array([array_points[i][0],array_points[i][1]])
+            print("--------------------")
+            print(array_points[i])
+            print(array_m[j])
+            distances[i,j]=round(np.linalg.norm(medoid-point),2)
+            print(distances[i,j])
 
 def div_cluster():
     pass
@@ -81,8 +99,11 @@ def div_cluster():
 
 
 init_20(array_ran_sur,radius,scaling_down);
-for count in range(40000):
+for count in range(num_points):
     print(generate_more(array_ran_sur, count+1,radius,scaling_down))
+num_points+=20
 
-kmeans_medoid(array_ran_sur,10,radius,scaling_down)
+medoids_id=[]
+kmeans_medoid(array_ran_sur,num_clus,radius,scaling_down,medoids_id)
+dist_calc(distances, medoids_id, array_ran_sur)
 root.mainloop();
