@@ -23,8 +23,8 @@ MAX_X, MAX_Y=5000,5000
 MIN_X, MIN_Y=-5000,-5000
 
 array_ran_sur=[]
-num_points=40000
-num_clus=15
+num_points=20000
+num_clus=20
 radius=1
 scaling_down=20
 distances=np.zeros((num_points+20, num_clus))
@@ -257,7 +257,6 @@ start=time.time()
 #inicializacia prvych 20 bodov a dodatocnych 40k bodov
 init_20(array_ran_sur,radius,scaling_down);
 for count in range(num_points):
-    #print(generate_more(array_ran_sur, count+1,radius,scaling_down))
     generate_more(array_ran_sur, count+1,radius,scaling_down)
 num_points+=20
 
@@ -278,6 +277,9 @@ update_cent(clusters)"""
 """kmetoid_draw(array_ran_sur,num_clus,radius,scaling_down,medoids_id)
 kmed_clustering()
 print(array_worst_dist)"""
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+##divizne zhlukovanie
 #------------------------------------------------------------------------------
 end=time.time()
 print(f"cas bezania: {end-start}")
