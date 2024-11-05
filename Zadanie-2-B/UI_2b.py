@@ -23,8 +23,8 @@ MAX_X, MAX_Y=5000,5000
 MIN_X, MIN_Y=-5000,-5000
 
 array_ran_sur=[]
-num_points=10
-num_clus=2
+num_points=20000
+num_clus=20
 radius=1
 scaling_down=20
 distances=np.zeros((num_points+20, num_clus))
@@ -43,9 +43,6 @@ def init_20(array,radius,scale):
 
 def generate_more(arr, count,radius,scale):
     point=random.choice(arr)
-
-    #print(f"Generovanie cisla c.{count}")
-    #print(point)
 
     #zredukovat interval!!!!
     X_offset=random.randint(-100,100)
@@ -74,15 +71,31 @@ def kmeans_draw(arr, k, radius, scale,centers_id):
     for num in range(k):
         centers_id.append(centers_sample[num])
 
+
+# k-means++ inicializácia
+def kmeans_plus_plus_init(arr, k):
+    centers = []
+    centers.append(random.choice(arr))  # Prvé centrum náhodne
+    while len(centers) < k:
+        distances = np.array([min([np.linalg.norm(np.array(point) - np.array(center)) ** 2 for center in centers]) for point in arr])
+        probs = distances / distances.sum()
+        cumprobs = np.cumsum(probs)
+        r = random.random()
+        for i, prob in enumerate(cumprobs):
+            if r < prob:
+                centers.append(arr[i])
+                break
+    return centers
+
+
 #vypocet vzdialenosti bodov od medoidov, distances => maxtrix POINTS x MEDOIDS
 def dist_calc(distances, array_centers, array_points):
-    print(f"centroidy v dist_calc: {centroids_id}")
+    #print(f"centroidy v dist_calc: {centroids_id}")
     for i in range(len(array_points)):
         for j in range(len(array_centers)):
             medoid=np.array([array_centers[j][0],array_centers[j][1]])
             point=np.array([array_points[i][0],array_points[i][1]])
             distances[i,j]=round(np.linalg.norm(medoid-point),1)
-            #print(distances[i][j])
 
 #priradenie bodov ku klasterom
 def clustering(distances, clusters, array):
@@ -97,10 +110,10 @@ def clustering(distances, clusters, array):
 def update_cent(clusters, iter):
     new_centroids = []
     for cluster in clusters:
-        print(f"klaster: {cluster} {len(cluster)}\n")
+        #print(f"klaster: {cluster} {len(cluster)}\n")
         if cluster:  # Skontroluj, či klaster nie je prázdny
             centroid = np.mean(cluster, axis=0).tolist()
-            print(centroid)
+            #print(centroid)
             new_centroids.append(centroid)
         """else:
             # Ak je klaster prázdny, pridaj pôvodný centroid
@@ -112,17 +125,19 @@ def update_cent(clusters, iter):
 
 def calculate_average_distance(clusters, centers):
     global array_worst_dist
+    arr=[]
     cont = True
     #print(f"v clusters je {len(clusters)} klasterov")
     for c_index, cluster in enumerate(clusters):
         center = np.array(centers[c_index])
-        distances = [np.linalg.norm(np.array(point) - center) for point in cluster]
+        distances = [np.linalg.norm(np.array(point)-center) for point in cluster]
         average_distance = np.mean(distances)
-
+        #arr.append(average_distance)
         if average_distance > 500:
             array_worst_dist.append(average_distance)
             cont = False
             #return False  # Ak je priemerná vzdialenosť v niektorom klastri > 500, pokračuj v iterácii
+    #print(arr)
     return cont  # Ak sú všetky klastre v poriadku, ukončíme cyklus
 
 
@@ -131,14 +146,16 @@ def draw_clusters(clusters):
         color = cluster_colors[cluster_index % len(cluster_colors)]
         for point in cluster:
 
-            coord_x = (point[0] // scaling_down) + 250 + 50
-            coord_y = (point[1] // scaling_down) + 250 + 50
+            coord_x = (point[0] // scaling_down)+250+50
+            coord_y = (point[1] // scaling_down)+250+50
             canvas.create_oval(coord_x - radius, coord_y - radius, coord_x + radius, coord_y + radius, fill=color, outline="")
 
         #print(cluster[cluster_index])
-        coord_x_center=(cluster[cluster_index][0] // scaling_down) + 250 + 50
-        coord_y_center=(cluster[cluster_index][1] // scaling_down) + 250 + 50
-        canvas.create_oval(coord_x_center - 3, coord_y_center - 3, coord_x_center + 3, coord_y_center + 3, fill=color, outline="black")
+    for cluster_index, cluster in enumerate(clusters):
+        color = cluster_colors[cluster_index % len(cluster_colors)]
+        coord_x_center=(cluster[cluster_index][0] // scaling_down)+250+50
+        coord_y_center=(cluster[cluster_index][1] // scaling_down)+250+50
+        canvas.create_oval(coord_x_center-2, coord_y_center-2, coord_x_center+2, coord_y_center+2, fill=color, outline="black")
 
 
 def kcent_clustering():
@@ -147,9 +164,10 @@ def kcent_clustering():
     
     # Počiatočná inicializácia centroidov
     #centroids_id = random.sample(array_ran_sur, num_clus)
+    centroids_id = kmeans_plus_plus_init(array_ran_sur, num_clus)
     
-    while iteration_count < 2:
-        iteration_count += 1
+    while iteration_count < 20:
+        iteration_count+=1
         print(f"\nIterácia: {iteration_count}")
         
         # Krok 1: Vypočítaj vzdialenosti medzi každým bodom a centroidmi
@@ -160,9 +178,9 @@ def kcent_clustering():
         clustering(distances, clusters, array_ran_sur)
 
         # Krok 3: Aktualizácia centroidov
-        print(centroids_id)
+        #print(centroids_id)
         new_centroids = update_cent(clusters, iteration_count)
-        print(new_centroids)
+        #print(new_centroids)
         
         # Skontroluj, či sa centroidy zmenili; ak nie, ukonči cyklus
         """if new_centroids == centroids_id:
@@ -175,7 +193,6 @@ def kcent_clustering():
         if calculate_average_distance(clusters, centroids_id):
             print("Dosiahnuty ciel")
             break  # Ukonči cyklus, ak sú všetky priemerné vzdialenosti v poriadku
-
     draw_clusters(clusters)
 
 
@@ -204,9 +221,8 @@ num_points+=20
 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
-kmeans_draw(array_ran_sur,num_clus,radius,scaling_down,centroids_id)
+#kmeans_draw(array_ran_sur,num_clus,radius,scaling_down,centroids_id)
 kcent_clustering()
-#print(array_worst_dist)
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
 
