@@ -23,7 +23,7 @@ MAX_X, MAX_Y=5000,5000
 MIN_X, MIN_Y=-5000,-5000
 
 array_ran_sur=[]
-num_points=20000
+num_points=10000
 num_clus=20
 radius=1
 scaling_down=20
@@ -38,9 +38,6 @@ def init_20(array,radius,scale):
         ran_sur=[ran_x,ran_y]
         array.append(ran_sur)
 
-        #coord_x=(ran_x//scale)+250+50   #+50 kvoli okraju
-        #coord_y=(ran_y//scale)+250+50
-        #canvas.create_oval(coord_x-radius,coord_y-radius,coord_x+radius,coord_y+radius, fill='black')
     #print(array_ran_sur)
 
 
@@ -67,10 +64,6 @@ def generate_more(arr, count,radius,scale):
     new=[new_x,new_y]
 
     arr.append(new)
-
-    #coord_x=(new[0]//scale)+250+50   #+50 kvoli okraju
-    #coord_y=(new[1]//scale)+250+50
-    #canvas.create_oval(coord_x-radius,coord_y-radius,coord_x+radius,coord_y+radius, fill="black", outline="")
     return new
 
 #------------------------------------------------------------------------------------------------------------------------------------------------
@@ -80,13 +73,6 @@ def kmeans_draw(arr, k, radius, scale,centers_id):
     centers_sample=random.sample(arr,k)
     for num in range(k):
         centers_id.append(centers_sample[num])
-
-    #print(f"zoznam medoidov: {medoids_id}")
-
-    """for i in range(k):
-        coord_x=(centers_sample[i][0]//scale)+250+50   #+50 kvoli okraju
-        coord_y=(centers_sample[i][1]//scale)+250+50
-        canvas.create_oval(coord_x-radius,coord_y-radius,coord_x+radius,coord_y+radius, width=5, outline="#24fc03")"""
 
 #vypocet vzdialenosti bodov od medoidov, distances => maxtrix POINTS x MEDOIDS
 def dist_calc(distances, array_centers, array_points):
@@ -147,6 +133,7 @@ def update_cent(clusters, iter):
 
 def calculate_average_distance(clusters, centers):
     global array_worst_dist
+    cont = True
     #print(f"v clusters je {len(clusters)} klasterov")
     for c_index, cluster in enumerate(clusters):
         center = np.array(centers[c_index])
@@ -155,8 +142,9 @@ def calculate_average_distance(clusters, centers):
 
         if average_distance > 500:
             array_worst_dist.append(average_distance)
-            return False  # Ak je priemerná vzdialenosť v niektorom klastri > 500, pokračuj v iterácii
-    return True  # Ak sú všetky klastre v poriadku, ukončíme cyklus
+            cont = False
+            #return False  # Ak je priemerná vzdialenosť v niektorom klastri > 500, pokračuj v iterácii
+    return cont  # Ak sú všetky klastre v poriadku, ukončíme cyklus
 
 
 # Hlavný cyklus
@@ -207,7 +195,7 @@ def kcent_clustering():
     iteration_count = 0
     
     # Počiatočná inicializácia centroidov
-    centroids_id = random.sample(array_ran_sur, num_clus)
+    #centroids_id = random.sample(array_ran_sur, num_clus)
     
     while iteration_count < 20:
         iteration_count += 1
@@ -224,14 +212,15 @@ def kcent_clustering():
         new_centroids = update_cent(clusters, iteration_count)
         
         # Skontroluj, či sa centroidy zmenili; ak nie, ukonči cyklus
-        if new_centroids == centroids_id:
+        """if new_centroids == centroids_id:
             print("Centroidy sa stabilizovali.")
-            break
+            break"""
         
         centroids_id = new_centroids  # Aktualizácia centroidov pre ďalšiu iteráciu
 
         # Krok 4: Skontroluj priemerné vzdialenosti (voliteľné)
         if calculate_average_distance(clusters, centroids_id):
+            print("Dosiahnuty ciel")
             break  # Ukonči cyklus, ak sú všetky priemerné vzdialenosti v poriadku
 
     draw_clusters(clusters)
@@ -265,13 +254,6 @@ num_points+=20
 kmeans_draw(array_ran_sur,num_clus,radius,scaling_down,centroids_id)
 kcent_clustering()
 print(array_worst_dist)
-
-"""kmeans_draw(array_ran_sur,num_clus,radius,scaling_down,centroids_id)
-dist_calc(distances, centroids_id, array_ran_sur)
-clusters = [[] for _ in range(num_clus)]
-clustering(distances, clusters, array_ran_sur)
-new_medoids = []
-update_cent(clusters)"""
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
 """kmetoid_draw(array_ran_sur,num_clus,radius,scaling_down,medoids_id)
