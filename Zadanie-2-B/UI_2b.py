@@ -23,8 +23,8 @@ MAX_X, MAX_Y=5000,5000
 MIN_X, MIN_Y=-5000,-5000
 
 array_ran_sur=[]
-num_points=10000
-num_clus=20
+num_points=10
+num_clus=2
 radius=1
 scaling_down=20
 distances=np.zeros((num_points+20, num_clus))
@@ -76,56 +76,35 @@ def kmeans_draw(arr, k, radius, scale,centers_id):
 
 #vypocet vzdialenosti bodov od medoidov, distances => maxtrix POINTS x MEDOIDS
 def dist_calc(distances, array_centers, array_points):
-    #print(len(array_points))
-    #print(len(array_m))
-
+    print(f"centroidy v dist_calc: {centroids_id}")
     for i in range(len(array_points)):
         for j in range(len(array_centers)):
             medoid=np.array([array_centers[j][0],array_centers[j][1]])
             point=np.array([array_points[i][0],array_points[i][1]])
-            distances[i,j]=round(np.linalg.norm(medoid-point),2)
+            distances[i,j]=round(np.linalg.norm(medoid-point),1)
+            #print(distances[i][j])
 
 #priradenie bodov ku klasterom
 def clustering(distances, clusters, array):
     prirad=np.argmin(distances, axis=1)                     #axis=1 => prvy stlpec matrixu
     priradenie_zoznam=prirad.tolist()                       #premena na pouzitelne pole
+    #print(f"toto je min: {priradenie_zoznam}")
     for point_index, cluster_index in enumerate(priradenie_zoznam):
         clusters[cluster_index].append(array[point_index])  #priradenie specifickeho bodu (nie index bodu) k polu specifickeho indexu klastera
-
-def update_med(new_medoids, clusters, color, iter):
-    #print("update funkcia")
-    radius=1
-    for cluster in clusters:
-        distances_in_cluster=[]
-        for point in cluster:
-            total_sum=sum(np.linalg.norm((np.array(point))-np.array(other_point)) for other_point in cluster)
-            distances_in_cluster.append((point, total_sum))
-
-        new_medoid=min(distances_in_cluster, key=lambda x: x[1])[0]
-        new_medoids.append(new_medoid)
-        #print(f"{new_medoids}")
-
-        if iter==10:
-            color="cyan"
-            coord_x=(new_medoid[0]//20)+250+50   #+50 kvoli okraju
-            coord_y=(new_medoid[1]//20)+250+50
-            canvas.create_oval(coord_x-radius, coord_y-radius, coord_x+radius, coord_y+radius, width=5, outline=color)
-    
-    #print("update done")
-    return new_medoids
 
 
 
 def update_cent(clusters, iter):
     new_centroids = []
     for cluster in clusters:
+        print(f"klaster: {cluster} {len(cluster)}\n")
         if cluster:  # Skontroluj, či klaster nie je prázdny
             centroid = np.mean(cluster, axis=0).tolist()
-            #print(centroid)
+            print(centroid)
             new_centroids.append(centroid)
-        else:
+        """else:
             # Ak je klaster prázdny, pridaj pôvodný centroid
-            new_centroids.append([0, 0])  # Môžeš nahradiť túto hodnotu inak, podľa potreby
+            new_centroids.append([0, 0])  # Môžeš nahradiť túto hodnotu inak, podľa potreby"""
 
     return new_centroids
 
@@ -145,34 +124,6 @@ def calculate_average_distance(clusters, centers):
             cont = False
             #return False  # Ak je priemerná vzdialenosť v niektorom klastri > 500, pokračuj v iterácii
     return cont  # Ak sú všetky klastre v poriadku, ukončíme cyklus
-
-
-# Hlavný cyklus
-def kmed_clustering():
-    global medoids_id, new_medoids, clusters, num_clus, num_points, array_worst_dist
-
-    iteration_count = 0
-    color="black"
-    while iteration_count!=20:
-        iteration_count += 1
-        print(f"Iterácia: {iteration_count}")
-
-        # Krok 1: Vypočítaj vzdialenosti a priraď body k najbližším medoidom
-        dist_calc(distances, medoids_id, array_ran_sur)
-        clusters = [[] for _ in range(num_clus)]  # Reset klastra pre novú iteráciu
-        clustering(distances, clusters, array_ran_sur)
-
-        # Krok 2: Aktualizuj medoidy
-        new_medoids = []
-        update_med(new_medoids, clusters, color, iteration_count)
-        medoids_id = new_medoids
-
-        # Krok 3: Skontroluj priemerné vzdialenosti
-        if calculate_average_distance(clusters, medoids_id):
-            #print("Podmienka splnená: Priemerná vzdialenosť v každom klastri je ≤ 500.")
-            break  # Ukonči cyklus, ak sú všetky priemerné vzdialenosti v poriadku
-        #else:
-            #print("Podmienka nesplnená: Opakujeme klastrovanie.")
 
 
 def draw_clusters(clusters):
@@ -197,9 +148,9 @@ def kcent_clustering():
     # Počiatočná inicializácia centroidov
     #centroids_id = random.sample(array_ran_sur, num_clus)
     
-    while iteration_count < 20:
+    while iteration_count < 2:
         iteration_count += 1
-        print(f"Iterácia: {iteration_count}")
+        print(f"\nIterácia: {iteration_count}")
         
         # Krok 1: Vypočítaj vzdialenosti medzi každým bodom a centroidmi
         dist_calc(distances, centroids_id, array_ran_sur)
@@ -209,7 +160,9 @@ def kcent_clustering():
         clustering(distances, clusters, array_ran_sur)
 
         # Krok 3: Aktualizácia centroidov
+        print(centroids_id)
         new_centroids = update_cent(clusters, iteration_count)
+        print(new_centroids)
         
         # Skontroluj, či sa centroidy zmenili; ak nie, ukonči cyklus
         """if new_centroids == centroids_id:
@@ -253,16 +206,70 @@ num_points+=20
 #------------------------------------------------------------------------------
 kmeans_draw(array_ran_sur,num_clus,radius,scaling_down,centroids_id)
 kcent_clustering()
-print(array_worst_dist)
+#print(array_worst_dist)
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
-"""kmetoid_draw(array_ran_sur,num_clus,radius,scaling_down,medoids_id)
-kmed_clustering()
-print(array_worst_dist)"""
-#------------------------------------------------------------------------------
-#------------------------------------------------------------------------------
-##divizne zhlukovanie
-#------------------------------------------------------------------------------
+
 end=time.time()
 print(f"cas bezania: {end-start}")
 root.mainloop();
+
+
+
+
+
+
+"""
+def update_med(new_medoids, clusters, color, iter):
+    #print("update funkcia")
+    radius=1
+    for cluster in clusters:
+        distances_in_cluster=[]
+        for point in cluster:
+            total_sum=sum(np.linalg.norm((np.array(point))-np.array(other_point)) for other_point in cluster)
+            distances_in_cluster.append((point, total_sum))
+
+        new_medoid=min(distances_in_cluster, key=lambda x: x[1])[0]
+        new_medoids.append(new_medoid)
+        #print(f"{new_medoids}")
+
+        if iter==10:
+            color="cyan"
+            coord_x=(new_medoid[0]//20)+250+50   #+50 kvoli okraju
+            coord_y=(new_medoid[1]//20)+250+50
+            canvas.create_oval(coord_x-radius, coord_y-radius, coord_x+radius, coord_y+radius, width=5, outline=color)
+    
+    #print("update done")
+    return new_medoids
+    
+    
+    
+    
+    
+    # Hlavný cyklus
+def kmed_clustering():
+    global medoids_id, new_medoids, clusters, num_clus, num_points, array_worst_dist
+
+    iteration_count = 0
+    color="black"
+    while iteration_count!=20:
+        iteration_count += 1
+        print(f"\nIterácia: {iteration_count}")
+
+        # Krok 1: Vypočítaj vzdialenosti a priraď body k najbližším medoidom
+        dist_calc(distances, medoids_id, array_ran_sur)
+        clusters = [[] for _ in range(num_clus)]  # Reset klastra pre novú iteráciu
+        clustering(distances, clusters, array_ran_sur)
+
+        # Krok 2: Aktualizuj medoidy
+        new_medoids = []
+        update_med(new_medoids, clusters, color, iteration_count)
+        medoids_id = new_medoids
+
+        # Krok 3: Skontroluj priemerné vzdialenosti
+        if calculate_average_distance(clusters, medoids_id):
+            #print("Podmienka splnená: Priemerná vzdialenosť v každom klastri je ≤ 500.")
+            break  # Ukonči cyklus, ak sú všetky priemerné vzdialenosti v poriadku
+        #else:
+            #print("Podmienka nesplnená: Opakujeme klastrovanie.")
+    """
