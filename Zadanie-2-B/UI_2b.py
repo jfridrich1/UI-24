@@ -155,7 +155,7 @@ def draw_clusters(clusters):
         color = cluster_colors[cluster_index % len(cluster_colors)]
         coord_x_center=(cluster[cluster_index][0] // scaling_down)+250+50
         coord_y_center=(cluster[cluster_index][1] // scaling_down)+250+50
-        canvas.create_oval(coord_x_center-2, coord_y_center-2, coord_x_center+2, coord_y_center+2, fill=color, outline="black")
+        canvas.create_oval(coord_x_center-3, coord_y_center-3, coord_x_center+3, coord_y_center+3, fill=color, outline="black")
 
 
 def kcent_clustering():
@@ -194,7 +194,57 @@ def kcent_clustering():
             print("Dosiahnuty ciel")
             break  # Ukonči cyklus, ak sú všetky priemerné vzdialenosti v poriadku
     draw_clusters(clusters)
+#----------------------------------------------------------------------------------------------------------------------------------------
+def divisive_clustering(points, max_avg_distance=500):
+    clusters = [points]  # Začíname s jedným zhlukom
+    final_clusters = []
 
+    while clusters:
+        cluster = clusters.pop(0)
+        centroid = calculate_centroid(cluster)
+        avg_dist = average_distance(cluster, centroid)
+
+        if avg_dist > max_avg_distance:
+            # Rozdelíme zhluk, ak priemerná vzdialenosť prekračuje limit
+            subclusters = split_cluster(cluster)
+            clusters.extend(subclusters)
+        else:
+            # Pridáme do finálneho zoznamu, ak priemerná vzdialenosť je v norme
+            final_clusters.append(cluster)
+
+    return final_clusters
+
+def calculate_centroid(cluster):
+    return np.mean(cluster, axis=0)
+
+def average_distance(cluster, centroid):
+    distances = [np.linalg.norm(np.array(point) - np.array(centroid)) for point in cluster]
+    return np.mean(distances)
+
+# Funkcia na rozdelenie zhluku na dva podzhluky
+def split_cluster(cluster):
+    initial_centroids = np.array([cluster[random.randint(0, len(cluster)-1)] for _ in range(2)])
+    prev_centroids = np.zeros(initial_centroids.shape)
+    clusters = [[], []]
+
+    while not np.array_equal(initial_centroids, prev_centroids):
+        clusters = [[], []]  # Vyprázdnime podzhluky
+        # Priraďujeme body do najbližších centroidov
+        for point in cluster:
+            distances = [np.linalg.norm(np.array(point) - c) for c in initial_centroids]
+            closest_index = np.argmin(distances)
+            clusters[closest_index].append(point)
+
+        # Aktualizujeme centroidy podzhlukov
+        prev_centroids = initial_centroids
+        initial_centroids = np.array([calculate_centroid(np.array(c)) for c in clusters])
+
+    return [np.array(c) for c in clusters]
+
+def divisive_clustering_main():
+    global array_ran_sur
+    clusters = divisive_clustering(array_ran_sur)  # Aplikuj divízne zhlukovanie
+    draw_clusters(clusters)  # Vykresli zhluky po rozdelení
 
 
 
@@ -222,8 +272,9 @@ num_points+=20
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
 #kmeans_draw(array_ran_sur,num_clus,radius,scaling_down,centroids_id)
-kcent_clustering()
+#kcent_clustering()
 #------------------------------------------------------------------------------
+divisive_clustering_main()
 #------------------------------------------------------------------------------
 
 end=time.time()
