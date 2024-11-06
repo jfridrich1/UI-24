@@ -18,14 +18,14 @@ MAX_X, MAX_Y=5000,5000
 MIN_X, MIN_Y=-5000,-5000
 
 array_ran_sur=[]
-num_points=2000
+num_points=20000
 num_clus=20
 radius=1
 scaling_down=20
 distances=np.zeros((num_points+20, num_clus))
 
 
-def init_20(array,radius,scale):
+def init_20(array):
     global MAX_X,MAX_Y,MIN_X,MIN_Y
     for i in range(20):
         ran_x=random.randrange(MIN_X,MAX_X)
@@ -36,7 +36,7 @@ def init_20(array,radius,scale):
     #print(array_ran_sur)
 
 
-def generate_more(arr, count,radius,scale):
+def generate_more(arr):
     point=random.choice(arr)
 
     #zredukovat interval!!!!
@@ -129,12 +129,14 @@ def calculate_average_distance(clusters, centers):
         center = np.array(centers[c_index])
         distances = [np.linalg.norm(np.array(point)-center) for point in cluster]
         average_distance = np.mean(distances)
-        #arr.append(average_distance)
+        arr.append(average_distance)
+
         if average_distance > 500:
             array_worst_dist.append(average_distance)
             cont = False
             #return False  # Ak je priemerná vzdialenosť v niektorom klastri > 500, pokračuj v iterácii
     #print(arr)
+    print(arr)
     return cont  # Ak sú všetky klastre v poriadku, ukončíme cyklus
 
 
@@ -148,14 +150,14 @@ def draw_clusters(clusters):
             canvas.create_oval(coord_x - radius, coord_y - radius, coord_x + radius, coord_y + radius, fill=color, outline="")
 
         #print(cluster[cluster_index])
-    for cluster_index, cluster in enumerate(clusters):
+    """for cluster_index, cluster in enumerate(clusters):
         color = cluster_colors[cluster_index % len(cluster_colors)]
         coord_x_center=(cluster[cluster_index][0] // scaling_down)+250+50
         coord_y_center=(cluster[cluster_index][1] // scaling_down)+250+50
 
         #print(distances[cluster_index])
         #rad=distances[cluster_index]//4
-        canvas.create_oval(coord_x_center-3, coord_y_center-3, coord_x_center+3, coord_y_center+3, outline="black")
+        canvas.create_oval(coord_x_center-3, coord_y_center-3, coord_x_center+3, coord_y_center+3, outline="black")"""
         #canvas.create_oval(coord_x_center-rad, coord_y_center-rad, coord_x_center+rad, coord_y_center+rad, outline="black")
 
 
@@ -260,11 +262,16 @@ def divisive_clustering_main():
 
 
 def update_med(new_medoids, clusters):
+    #print("update funkcia")
+    radius=1
     for cluster in clusters:
-        if cluster:  # Vyhni sa prázdnym klastrom
-            distances = cdist(cluster, cluster, 'euclidean')
-            medoid_index = np.argmin(distances.sum(axis=1))
-            new_medoids.append(cluster[medoid_index])
+        distances_in_cluster=[]
+        for point in cluster:
+            total_sum=sum(np.linalg.norm((np.array(point))-np.array(other_point)) for other_point in cluster)
+            distances_in_cluster.append((point, total_sum))
+
+        new_medoid=min(distances_in_cluster, key=lambda x: x[1])[0]
+        new_medoids.append(new_medoid)
     return new_medoids
 
     
@@ -274,9 +281,9 @@ def kmed_clustering():
     global num_clus, num_points, array_ran_sur
 
     iteration_count=0
-    medoids_id=kmeans_select(array_ran_sur,num_clus)
+    medoids_id=kmeans_plus_plus_init(array_ran_sur,num_clus)
     print(medoids_id)
-    while iteration_count < 20:
+    while iteration_count < 5:
         iteration_count+=1
         print(f"\nIterácia: {iteration_count}")
 
@@ -292,10 +299,11 @@ def kmed_clustering():
 
         # Krok 3: Skontroluj priemerné vzdialenosti
         if calculate_average_distance(clusters, medoids_id):
-            #print("Podmienka splnená: Priemerná vzdialenosť v každom klastri je ≤ 500.")
+            print("Podmienka splnená: Priemerná vzdialenosť v každom klastri je ≤ 500.")
             break  # Ukonči cyklus, ak sú všetky priemerné vzdialenosti v poriadku
-        #else:
-            #print("Podmienka nesplnená: Opakujeme klastrovanie.")
+        else:
+            print("Podmienka nesplnená: Opakujeme klastrovanie.")
+
     draw_clusters(clusters)
 
 
@@ -316,9 +324,9 @@ cluster_colors = [
 
 start=time.time()
 #inicializacia prvych 20 bodov a dodatocnych 40k bodov
-init_20(array_ran_sur,radius,scaling_down);
+init_20(array_ran_sur);
 for count in range(num_points):
-    generate_more(array_ran_sur, count+1,radius,scaling_down)
+    generate_more(array_ran_sur)
 num_points+=20
 
 match choice:
