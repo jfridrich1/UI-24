@@ -3,19 +3,13 @@ import numpy as np
 import random
 import time
 
+
+choice=int(input("Vyber metodu zhlukovania (1/2/3): "))
+
 root=tk.Tk()
 max_x_can,max_y_can=600,600;
 canvas=tk.Canvas(root, width=max_x_can, height=max_y_can);
 canvas.pack()
-
-"""choice=int(input("Vyber metodu zhlukovania (1/2/3): "))
-match choice:
-    case 1:
-        print("k means centroid")
-    case 2:
-        print("k metoid")
-    case 3:
-        print("divizne")"""
 
 canvas.create_rectangle(50,50,550,550);
 
@@ -155,7 +149,11 @@ def draw_clusters(clusters):
         color = cluster_colors[cluster_index % len(cluster_colors)]
         coord_x_center=(cluster[cluster_index][0] // scaling_down)+250+50
         coord_y_center=(cluster[cluster_index][1] // scaling_down)+250+50
-        canvas.create_oval(coord_x_center-3, coord_y_center-3, coord_x_center+3, coord_y_center+3, fill=color, outline="black")
+
+        #print(distances[cluster_index])
+        #rad=distances[cluster_index]//4
+        canvas.create_oval(coord_x_center-3, coord_y_center-3, coord_x_center+3, coord_y_center+3, outline="black")
+        #canvas.create_oval(coord_x_center-rad, coord_y_center-rad, coord_x_center+rad, coord_y_center+rad, outline="black")
 
 
 def kcent_clustering():
@@ -195,24 +193,28 @@ def kcent_clustering():
             break  # Ukonči cyklus, ak sú všetky priemerné vzdialenosti v poriadku
     draw_clusters(clusters)
 #----------------------------------------------------------------------------------------------------------------------------------------
-def divisive_clustering(points, max_avg_distance=500):
+def divisive_clustering(points):
     clusters = [points]  # Začíname s jedným zhlukom
     final_clusters = []
+    arr_avg_dist=[]
+    sum_clusters=1
 
     while clusters:
         cluster = clusters.pop(0)
         centroid = calculate_centroid(cluster)
         avg_dist = average_distance(cluster, centroid)
 
-        if avg_dist > max_avg_distance:
+        if avg_dist > 500:
             # Rozdelíme zhluk, ak priemerná vzdialenosť prekračuje limit
             subclusters = split_cluster(cluster)
             clusters.extend(subclusters)
+            sum_clusters+=1
         else:
             # Pridáme do finálneho zoznamu, ak priemerná vzdialenosť je v norme
             final_clusters.append(cluster)
+            arr_avg_dist.append(avg_dist)
 
-    return final_clusters
+    return final_clusters,arr_avg_dist,sum_clusters
 
 def calculate_centroid(cluster):
     return np.mean(cluster, axis=0)
@@ -243,8 +245,18 @@ def split_cluster(cluster):
 
 def divisive_clustering_main():
     global array_ran_sur
-    clusters = divisive_clustering(array_ran_sur)  # Aplikuj divízne zhlukovanie
+    clusters, distances,sum= divisive_clustering(array_ran_sur)  # Aplikuj divízne zhlukovanie
+    print(sum)
+    print(list(map(lambda x: round(float(x)),distances)))
     draw_clusters(clusters)  # Vykresli zhluky po rozdelení
+
+
+
+#----------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
 
 
 
@@ -269,13 +281,18 @@ for count in range(num_points):
     generate_more(array_ran_sur, count+1,radius,scaling_down)
 num_points+=20
 
-#------------------------------------------------------------------------------
-#------------------------------------------------------------------------------
-#kmeans_draw(array_ran_sur,num_clus,radius,scaling_down,centroids_id)
-#kcent_clustering()
-#------------------------------------------------------------------------------
-divisive_clustering_main()
-#------------------------------------------------------------------------------
+match choice:
+    case 1:
+        print("k means centroid")
+        kcent_clustering()
+    case 2:
+        print("k means medoid")
+    case 3:
+        print("divizne zhlukovanie")
+        divisive_clustering_main()
+    case default:
+        print("Chybny vstup")
+
 
 end=time.time()
 print(f"cas bezania: {end-start}")
