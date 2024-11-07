@@ -6,25 +6,24 @@ import time
 #User input - vyber zhlukovaca
 choice = int(input("Vyberte metodu zhlukovania (1/2/3)\n1: k-means-centroid\n2: k-means-medoid\n3: divizne zhlukovanie: "))
 
-# Tkinter initialization
+#Tkinter
 root = tk.Tk()
 max_x_can, max_y_can=600, 600
 canvas=tk.Canvas(root, width=max_x_can, height=max_y_can)
 canvas.pack()
-#canvas.create_rectangle(50, 50, 550, 550)
 
-# Coordinates range for point generation
+#Suradnice
 MAX_X, MAX_Y=5000, 5000
 MIN_X, MIN_Y=-5000, -5000
 
-# Clustering parameters
+#Parametre
 num_points=20000
 num_clus=20
 radius=1
 scaling_down=20
 distances=np.zeros((num_points+20, num_clus))
 
-# Arrays for points and centroids
+#Polia
 array_points=[]
 array_worst_dist=[]
 centroids_id=[]
@@ -44,7 +43,7 @@ def generate_more(count):
         while True:
             new_x = point[0] + random.randint(-100, 100)
             new_y = point[1] + random.randint(-100, 100)
-            if MIN_X<=new_x<=MAX_X and MIN_Y<=new_y<= MAX_Y:    #zabezpecenie rozsahu
+            if MIN_X<=new_x<=MAX_X and MIN_Y<=new_y<=MAX_Y:    #zabezpecenie rozsahu
                 array_points.append((new_x, new_y))
                 break
 
@@ -261,5 +260,7 @@ else:
 
 end=time.time()
 print(f"cas bezania: {round(end-start,2)} sekund")
+
+#kvoli prekryvaniu s bodmi
 canvas.create_rectangle(50, 50, 550, 550)
 root.mainloop()
