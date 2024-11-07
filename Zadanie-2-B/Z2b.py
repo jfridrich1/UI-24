@@ -4,8 +4,7 @@ import random
 import time
 
 #User input - vyber zhlukovaca
-#choice = int(input("Vyberte metodu zhlukovania (1/2/3)\n1: k-means-centroid\n2: k-means-medoid\n3: divizne zhlukovanie\n: "))
-choice = 3
+choice = int(input("Vyberte metodu zhlukovania (1/2/3)\n1: k-means-centroid\n2: k-means-medoid\n3: divizne zhlukovanie\n: "))
 
 #Tkinter
 root = tk.Tk()
