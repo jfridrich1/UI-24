@@ -2,7 +2,6 @@ import tkinter as tk
 import numpy as np
 import random
 import time
-from scipy.spatial.distance import cdist
 
 
 choice=int(input("Vyber metodu zhlukovania (1/2/3): "))
@@ -18,8 +17,8 @@ MAX_X, MAX_Y=5000,5000
 MIN_X, MIN_Y=-5000,-5000
 
 array_ran_sur=[]
-num_points=20000
-num_clus=20
+num_points=10000
+num_clus=5
 radius=1
 scaling_down=20
 distances=np.zeros((num_points+20, num_clus))
@@ -33,7 +32,6 @@ def init_20(array):
         ran_sur=[ran_x,ran_y]
         array.append(ran_sur)
 
-    #print(array_ran_sur)
 
 
 def generate_more(arr):
