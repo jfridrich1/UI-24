@@ -4,7 +4,8 @@ import random
 import time
 
 #User input - vyber zhlukovaca
-choice = int(input("Vyberte metodu zhlukovania (1/2/3)\n1: k-means-centroid\n2: k-means-medoid\n3: divizne zhlukovanie: "))
+#choice = int(input("Vyberte metodu zhlukovania (1/2/3)\n1: k-means-centroid\n2: k-means-medoid\n3: divizne zhlukovanie\n: "))
+choice = 3
 
 #Tkinter
 root = tk.Tk()
@@ -17,11 +18,12 @@ MAX_X, MAX_Y=5000, 5000
 MIN_X, MIN_Y=-5000, -5000
 
 #Parametre
-num_points=20000
+num_points=40000
 num_clus=20
 radius=1
 scaling_down=20
 distances=np.zeros((num_points+20, num_clus))
+iteration_limit=50
 
 #Polia
 array_points=[]
@@ -132,11 +134,11 @@ def draw_clusters(clusters, centers):
 
 # k-cent clustering
 def kcent_clustering():
-    global centroids_id, choice
+    global centroids_id, choice, iteration_limit
     check=False
     centroids_id=kmeans_pp(array_points, num_clus, choice)
 
-    for c in range(20):
+    for c in range(iteration_limit):
         dists=dist_calc(centroids_id)
         clusters=[[] for z in range(num_clus)]
         for point_index, cluster_index in enumerate(clustering(dists)):
@@ -152,18 +154,18 @@ def kcent_clustering():
     if check:
         print("Uspesne ukoncenie, podmienka splnena!")
     else:
-        print("Neuspesne ukoncenie, dosiahnuty limit iteracii (20)!")
+        print(f"Neuspesne ukoncenie, dosiahnuty limit iteracii ({iteration_limit})!")
 
     #vykreslenie ako posledny krok
     draw_clusters(clusters, centroids_id)
 
 #k-medoids clustering
 def kmed_clustering():
-    global medoids_id, choice
+    global medoids_id, choice, iteration_limit
     check=False
     medoids_id=kmeans_pp(array_points, num_clus, choice)
 
-    for c in range(20):
+    for c in range(10):
         dists=dist_calc(medoids_id)
         clusters= [[] for z in range(num_clus)]
         for point_index, cluster_index in enumerate(clustering(dists)):
@@ -179,7 +181,7 @@ def kmed_clustering():
     if check:
         print("Uspesne ukoncenie, podmienka splnena!")
     else:
-        print("Neuspesne ukoncenie, dosiahnuty limit iteracii (20)!")
+        print(f"Neuspesne ukoncenie, dosiahnuty limit iteracii ({iteration_limit})!")
 
     #vykreslenie ako posledny krok
     draw_clusters(clusters, medoids_id)
@@ -205,6 +207,7 @@ def divisive_clustering():
             final_clusters.append(cluster)
     
     #vykreslenie ako posledny krok
+    print(f"Pocet klasterov: {len(final_clusters)}")
     draw_clusters(final_clusters, [np.mean(cluster, axis=0) for cluster in final_clusters])
 
 
