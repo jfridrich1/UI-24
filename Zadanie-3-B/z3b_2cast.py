@@ -7,6 +7,7 @@ class Module:
 
     def backward(self, gradient):
         raise NotImplementedError("Backward musí byť implementovaný.")
+    
     def updateweights(this, learning_rate, momentum=0):#update parameters
         pass
 
@@ -24,9 +25,6 @@ class Model:
         return input
     
     def backward(self, gradient):
-        """
-        Vykoná spätné šírenie cez všetky moduly (v opačnom poradí).
-        """
         for module in reversed(self.modules):
             gradient = module.backward(gradient)
     def updateweights(this, learning_rate, momentum=0):
@@ -36,55 +34,36 @@ class Model:
 
 
 class Linear(Module):
-    """def __init__(self, input_size, output_size, activation='relu'):
-        self.weights = np.random.randn(input_size, output_size) * 0.01  # Malé náhodné váhy
-        self.bias = np.zeros((1, output_size))  # Bias inicializovaný na nulu
-        self.input = None  # Uchová vstupy z dopredného smeru
-        self.gradient_weights = None  # Gradient váh
-        self.gradient_bias = None  # Gradient biasu
-
-        # Pridáme moment
-        self.velocity_weights = np.zeros_like(self.weights)
-        self.velocity_bias = np.zeros_like(self.bias)"""
-    def __init__(this, inputsize, outputsize, activation='relu'):
-        #Inicializácia počiatočných vah a biasov, odporučil mi to čet4
-        if activation == 'relu':
-            this.W = np.random.randn(inputsize, outputsize) * np.sqrt(2 / inputsize)
-        elif activation == 'tanh':
-            this.W = np.random.randn(inputsize, outputsize) * np.sqrt(1 / inputsize)
+    def __init__(self, inputsize, outputsize, activation="relu"):
+        # Inicializácia váh a biasov
+        if activation == "relu":
+            self.W = np.random.randn(inputsize, outputsize) * np.sqrt(2 / inputsize)
+        elif activation == "tanh":
+            self.W = np.random.randn(inputsize, outputsize) * np.sqrt(1 / inputsize)
         else:
-            this.W = np.random.randn(inputsize, outputsize) * 0.01
+            self.W = np.random.randn(inputsize, outputsize) * 0.01
 
-        this.W = np.random.randn(inputsize, outputsize) * np.sqrt(1 / inputsize)
-        this.b = np.zeros((1, outputsize))
-
-        this.grad_W = np.zeros_like(this.W)
-        this.grad_b = np.zeros_like(this.b)
-
-        this.velocity_W = np.zeros_like(this.W)
-        this.velocity_b = np.zeros_like(this.b)
+        self.b = np.zeros((1, outputsize))
+        self.grad_W = np.zeros_like(self.W)
+        self.grad_b = np.zeros_like(self.b)
+        self.velocity_W = np.zeros_like(self.W)
+        self.velocity_b = np.zeros_like(self.b)
 
     def forward(self, input):
-        self.input = input  # Ukladáme vstup pre spätné šírenie
-        return np.dot(input, self.weights) + self.bias
+        self.input = input
+        return np.dot(input, self.W) + self.b
 
     def backward(self, gradient):
-        # Gradienty váh a biasu
-        self.gradient_weights = np.dot(self.input.T, gradient)
-        self.gradient_bias = np.sum(gradient, axis=0, keepdims=True)
+        self.grad_W = np.dot(self.input.T, gradient)
+        self.grad_b = np.sum(gradient, axis=0, keepdims=True)
+        return np.dot(gradient, self.W.T)
 
-        # Gradient vzhľadom na vstup
-        return np.dot(gradient, self.weights.T)
-    
+    def updateweights(self, learning_rate, momentum=0):
+        self.velocity_W = momentum * self.velocity_W - learning_rate * self.grad_W
+        self.velocity_b = momentum * self.velocity_b - learning_rate * self.grad_b
+        self.W += self.velocity_W
+        self.b += self.velocity_b
 
-    def update_weights(self, learning_rate, beta=0.9):
-        # Aktualizácia momenta pre váhy
-        self.velocity_weights = beta * self.velocity_weights - learning_rate * self.gradient_weights
-        self.weights += self.velocity_weights
-
-        # Aktualizácia momenta pre biasy
-        self.velocity_bias = beta * self.velocity_bias - learning_rate * self.gradient_bias
-        self.bias += self.velocity_bias
 
     
 class Sigmoid(Module):
@@ -146,13 +125,11 @@ def train_network(problem_name, X, y, model, learning_rate, epochs, momentum):
     """for layer in layers:
         model.add_module(Linear(layer[0], layer[1]))
         model.add_module(Sigmoid())"""
-
     # Chybová funkcia
     mse = MSE()
     losses = []
 
     for epoch in range(epochs):
-        # Dopredný smer
         sum_loss = 0.0
         for i in range(len(X)):
             x_i = X[i:i+1]
@@ -179,55 +156,59 @@ def train_network(problem_name, X, y, model, learning_rate, epochs, momentum):
                     module.bias -= learning_rate * module.gradient_bias"""
 
 
-    if (epoch + 1) % 100 == 0:
-        print(f'Epoch {epoch + 1}/{epochs} /Loss: {average_loss:.5f}')
-        predictions = model.forward(X)
-        predictions_binary = (predictions > 0.5).astype(int)
-        print(f'Predictions of {problem_name}:', predictions_binary.flatten())
-        print(f'Real values of {problem_name}:', y.flatten())
-    return model, losses
+        if epoch == 0 or (epoch + 1) % 100 == 0:
+            print(f"{"-"*40}")
+            print(f"Epoch c. {epoch + 1}, Priemerny loss: {average_loss:.4f}")
+            predictions = model.forward(X)
+            predictions_binary = (predictions > 0.5).astype(int)
+            print(f"Predpoved {problem_name}:", predictions_binary.flatten())
+            print(f"Hodnoty {problem_name}:", y.flatten())
+    return losses
 
 # Vizualizácia tréningovej chyby
-def visual(rows,columns, plotidx, activation, lr, momentum, losses):
-    plt.subplot(rows, columns, plotidx)
-    plt.plot(losses, label='Training Loss')
-    plt.title(f'{activation}, LR: {lr}, Mom: {momentum}', fontsize=7)
-    plt.xlabel('Epoch', fontsize=7)
-    plt.ylabel('MSE Loss', fontsize=7)
+def visual(rows,columns, pltidx, activation, lr, momentum, losses):
+    plt.subplot(rows, columns, pltidx)
+    plt.plot(losses, label="Trenovaci Loss", color='Purple')
+    plt.title(f"AF: {activation}, LR: {lr}, M: {momentum}", fontsize=10)
     plt.grid(True)
-    pltidx += 1
-    plt.tick_params(axis='both', which='major', labelsize=7)
+    plt.tick_params(axis='both', which='major', labelsize=6)
+    plt.ticklabel_format(style='plain', axis='y')  # Zakáže vedecký zápis na osi y
 
-def graph(hidden_layers=1, hidden_size=4, activation='tanh'):
+def add_layers(hidden_layers=1, hidden_size=4, activation="relu"):
     layers = []
     inputsize = 2
-    for _ in range(hidden_layers):
+    for lyr in range(hidden_layers):
         layers.append(Linear(inputsize, hidden_size, activation))
-        if activation == 'sigmoid':
-            layers.append(Sigmoid())
-        elif activation == 'tanh':
-            layers.append(Tanh())
-        elif activation == 'relu':
+        if activation == "relu":
             layers.append(ReLU())
+        elif activation == "sigmoid":
+            layers.append(Sigmoid())
+        elif activation == "tanh":
+            layers.append(Tanh())
         else:
-            raise ValueError(f"Unsupported activation function: {activation}")
+            print(f"Chybna aktivacna funkcia: {activation}")
         inputsize = hidden_size
-    layers.append(Linear(inputsize, 1, activation='sigmoid'))
+    layers.append(Linear(inputsize, 1, activation="sigmoid"))
     layers.append(Sigmoid())
     return Model(layers)
 
+
+
+
+test_config = {
+    "epochs" : 500,
+    "lr_list" : [0.1, 0.05, 0.01],
+    "momentum_list" : [0, 0.9],
+    "activ_list" : ["sigmoid", "tanh", "relu"],
+    "problem_list" : ["AND","OR","XOR"],
+}
+
 # AND a OR dáta
-datasets = {
+problem_datasets = {
     "XOR": (np.array([[0, 0], [0, 1], [1, 0], [1, 1]]), np.array([[0], [1], [1], [0]])),
     "AND": (np.array([[0, 0], [0, 1], [1, 0], [1, 1]]), np.array([[0], [0], [0], [1]])),
     "OR":  (np.array([[0, 0], [0, 1], [1, 0], [1, 1]]), np.array([[0], [1], [1], [1]])),
 }
-
-epochs = 500
-lr_list = [0.1, 0.05, 0.01]
-momentum_list = [0, 0.9]
-activ_list = ['sigmoid', 'tanh', 'relu']
-problem_list = ['AND','OR','XOR']
 
 # Definícia modelu
 """model = Model()
@@ -236,49 +217,46 @@ model.add_module(Sigmoid())     # Aktivačná funkcia pre skrytú vrstvu
 model.add_module(Linear(4, 1))  # Výstupná vrstva (4 vstupy, 1 výstup)
 model.add_module(Sigmoid())     # Aktivačná funkcia pre výstup
 """
-# Chybová funkcia
-mse = MSE()
-
 
 while True:
-    problem_select = int(input("Vyberte problem:\n1 - AND problem\n2- OR problem\n3 - XOR problem\n>:"))
+    problem_select = int(input("Vyberte problem:\n1 - XOR problem\n2- AND problem\n3 - OR problem\n>:"))
+    print(f"\n{"-"*100}")
 
     if problem_select==1:
-        print("\nAND problem:")
-        problem_name = 'AND'
-        X, y = datasets[problem_name]
+        print(">>> XOR problem <<<")
+        problem_name = "XOR"
+        X, y = problem_datasets[problem_name]
     elif problem_select==2:
-        print("\nOR problem:")
-        problem_name = 'OR'
-        X, y = datasets[problem_name]
+        print(">>> AND problem <<<")
+        problem_name = "AND"
+        X, y = problem_datasets[problem_name]
     elif problem_select==3:
-        print("\nXOR problem:")
-        problem_name = 'XOR'
-        X, y = datasets[problem_name]
+        print(">>> OR problem <<<")
+        problem_name = "OR"
+        X, y = problem_datasets[problem_name]
     else:
-        print("Invalid choice")
+        print("Chybny vstup, ukoncenie programu!")
         exit()
-        continue
 
     #test_case=int(input("Vlastny konfig/Testovaci konfig? (0/1)")) or 1
 
-    plt.figure(figsize=(20, 16))
-    numofactivations = len(activ_list)
-    numoflearningrates = len(lr_list)
-    numofmomentums = len(momentum_list)
-    rows = numofactivations
-    columns = numoflearningrates * numofmomentums
-    plotidx = 1
+    plt.figure(figsize=(20, 15))
+    rows = len(test_config["activ_list"])
+    columns = len(test_config["lr_list"]) * len(test_config["momentum_list"])
+    epochs= test_config["epochs"]
+    plt_id = 1
 
-    for activation in activ_list:
-        for lr in lr_list:
-            for momentum in momentum_list:
-                print(f'\nTrenovanie {problem_name} problem: aktivacna funkcia {activation}, rychlost ucenia: {lr}, momentum: {momentum}')
-                model = graph(hidden_layers=1, hidden_size=4, activation=activation)
+    for activation in test_config["activ_list"]:
+        for lr in test_config["lr_list"]:
+            for momentum in test_config["momentum_list"]:
+                print(f"{"-"*100}")
+                print(f"Zvoleny {problem_name} problem => aktivacna funkcia = {activation}, rychlost ucenia = {lr}, momentum = {momentum} ~")
+                model = add_layers(hidden_layers=1, hidden_size=4, activation=activation)
                 mse = MSE()
                 losses=train_network(problem_name, X, y, model, lr, epochs, momentum)
-                visual(rows, columns, plotidx, activation, lr, momentum, losses)
+                visual(rows, columns, plt_id, activation, lr, momentum, losses)
+                plt_id+=1
 
-    plt.suptitle(f'Training Loss of {problem_name} Problem', fontsize=15)
+    plt.suptitle(f"Trenovaci loss {problem_name} problemu", fontsize=15, fontweight='bold')
     plt.tight_layout(rect=[0, 0.03, 1, 0.95])
     plt.show()
