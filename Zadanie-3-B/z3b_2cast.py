@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 class Module:
     def forward(self, input):
         raise NotImplementedError("Forward musí byť implementovaný.")
@@ -10,6 +11,7 @@ class Module:
     
     def updateweights(this, learning_rate, momentum=0):
         pass
+
 
 class Model:
     def __init__(self, modules):
@@ -178,8 +180,6 @@ def add_layers(hidden_layers=1, hidden_size=4, activation="relu"):
     return Model(layers)
 
 
-
-
 test_config = {
     "epochs" : 500,
     "lr_list" : [0.1, 0.05, 0.01],
@@ -194,14 +194,6 @@ problem_datasets = {
     "AND": (np.array([[0, 0], [0, 1], [1, 0], [1, 1]]), np.array([[0], [0], [0], [1]])),
     "OR":  (np.array([[0, 0], [0, 1], [1, 0], [1, 1]]), np.array([[0], [1], [1], [1]])),
 }
-
-# Definícia modelu
-"""model = Model()
-model.add_module(Linear(2, 4))  # Skrytá vrstva (2 vstupy, 4 neuróny)
-model.add_module(Sigmoid())     # Aktivačná funkcia pre skrytú vrstvu
-model.add_module(Linear(4, 1))  # Výstupná vrstva (4 vstupy, 1 výstup)
-model.add_module(Sigmoid())     # Aktivačná funkcia pre výstup
-"""
 
 while True:
     problem_select = int(input("Vyberte problem:\n1 - XOR problem\n2- AND problem\n3 - OR problem\n>:"))

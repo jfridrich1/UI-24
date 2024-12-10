@@ -72,8 +72,8 @@ class HousingModel(nn.Module):
 
 
 # Funkcia na tréning s optimalizátormi
-def train_with_optimizers(name, optimizer, model, train_loader, test_loader, criterion, epochs):
-    print(f"\nTraining with {name} optimizer")
+def train_with_optimizers(opt_name, optimizer, model, train_loader, test_loader, crit, epochs):
+    print(f"\nZvoleny {opt_name} optimizator")
     #model = model_class()
     train_losses = []
     test_losses = []
@@ -85,7 +85,7 @@ def train_with_optimizers(name, optimizer, model, train_loader, test_loader, cri
         for features, targets in train_loader:
             optimizer.zero_grad()
             outputs = model(features)
-            loss = criterion(outputs.flatten(), targets)
+            loss = crit(outputs.flatten(), targets)
             loss.backward()
             optimizer.step()
             epoch_train_loss += loss.item()
@@ -96,12 +96,12 @@ def train_with_optimizers(name, optimizer, model, train_loader, test_loader, cri
         with torch.no_grad():
             for features, targets in test_loader:
                 outputs = model(features)
-                loss = criterion(outputs.flatten(), targets)
+                loss = crit(outputs.flatten(), targets)
                 epoch_test_loss += loss.item()
         test_losses.append(epoch_test_loss / len(test_loader))
-        print(f"Epoch {epoch+1}/{epochs}, Train Loss: {train_losses[-1]:.4f}, Test Loss: {test_losses[-1]:.4f}")
+        print(f"Epoch c. {epoch+1}, TrainL: {train_losses[-1]:.4f}, TestL: {test_losses[-1]:.4f}")
 
-    results[name] = {"train_losses": train_losses, "test_losses": test_losses}
+    results[opt_name] = {"train_losses": train_losses, "test_losses": test_losses}
 
     return results
 
@@ -120,16 +120,16 @@ def visual(results, epochs):
 
 while True:
     print(f"{"-"*100}")
-    program_select=int(input("Zadanie metody trenovania\n1 - SDG\n2 - SDG s momentom\n3 - ADAM\n>:"))
+    program_select=int(input("Zadajte metodu trenovania\n1 - SDG\n2 - SDG s momentom\n3 - ADAM\n>:"))
 
-    epochs=input("Pocet epochov (default = 20):") or 20
+    epochs=input("Pocet epochov (default = 40):") or 40
     epochs=int(epochs)
 
-    batch_size=input("Batch size (default = 16):") or 16
+    batch_size=input("Batch size (default = 32):") or 32
     batch_size=int(batch_size)
     print(f"{"-"*100}")
 
-    criterion = nn.MSELoss()
+    crit = nn.MSELoss()
     train_loader, test_loader=preparation(batch_size)
 
     if program_select==1:
@@ -150,6 +150,6 @@ while True:
     else:
         print("Ukoncenie programu"),exit()
 
-    results= train_with_optimizers(opt_name, optimizer, model, train_loader, test_loader, criterion, epochs)
+    results= train_with_optimizers(opt_name, optimizer, model, train_loader, test_loader, crit, epochs)
     visual(results, epochs)
     print(f"{"-"*100}")
