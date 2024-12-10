@@ -8,12 +8,11 @@ class Module:
     def backward(self, gradient):
         raise NotImplementedError("Backward musí byť implementovaný.")
     
-    def updateweights(this, learning_rate, momentum=0):#update parameters
+    def updateweights(this, learning_rate, momentum=0):
         pass
 
 class Model:
     def __init__(self, modules):
-        #self.modules = []  # Zoznam modulov
         self.modules = modules
     
     def add_module(self, module):
@@ -121,10 +120,6 @@ class MSE(Module):
     
 # Funkcia na tréning
 def train_network(problem_name, X, y, model, learning_rate, epochs, momentum):
-    # Pridanie vrstiev
-    """for layer in layers:
-        model.add_module(Linear(layer[0], layer[1]))
-        model.add_module(Sigmoid())"""
     # Chybová funkcia
     mse = MSE()
     losses = []
@@ -145,16 +140,6 @@ def train_network(problem_name, X, y, model, learning_rate, epochs, momentum):
         
         average_loss = sum_loss / len(X)
         losses.append(average_loss)
-
-        # Aktualizácia váh
-        """for module in model.modules:
-            if isinstance(module, Linear):
-                if use_momentum:
-                    module.update_weights(learning_rate, beta)
-                else:
-                    module.weights -= learning_rate * module.gradient_weights
-                    module.bias -= learning_rate * module.gradient_bias"""
-
 
         if epoch == 0 or (epoch + 1) % 100 == 0:
             print(f"{"-"*40}")
@@ -240,11 +225,13 @@ while True:
 
     #test_case=int(input("Vlastny konfig/Testovaci konfig? (0/1)")) or 1
 
-    plt.figure(figsize=(20, 15))
     rows = len(test_config["activ_list"])
     columns = len(test_config["lr_list"]) * len(test_config["momentum_list"])
     epochs= test_config["epochs"]
     plt_id = 1
+
+    win_figure = plt.figure(figsize=(20, 15))
+    win_figure.canvas.manager.set_window_title(f"{problem_name} problem")
 
     for activation in test_config["activ_list"]:
         for lr in test_config["lr_list"]:
@@ -252,11 +239,10 @@ while True:
                 print(f"{"-"*100}")
                 print(f"Zvoleny {problem_name} problem => aktivacna funkcia = {activation}, rychlost ucenia = {lr}, momentum = {momentum} ~")
                 model = add_layers(hidden_layers=1, hidden_size=4, activation=activation)
-                mse = MSE()
                 losses=train_network(problem_name, X, y, model, lr, epochs, momentum)
                 visual(rows, columns, plt_id, activation, lr, momentum, losses)
                 plt_id+=1
 
-    plt.suptitle(f"Trenovaci loss {problem_name} problemu", fontsize=15, fontweight='bold')
-    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+    plt.tight_layout(rect=[0.02, 0.02, 0.98, 0.95])
+    plt.suptitle(f"Trenovaci loss pre {problem_name} problem", fontsize=15, fontweight='bold')
     plt.show()
