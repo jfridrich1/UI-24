@@ -35,33 +35,33 @@ class Model:
 class Linear(Module):
     def __init__(self, inputsize, outputsize, activation="relu"):
         # Inicializácia váh a biasov
-        if activation == "relu":
-            self.W = np.random.randn(inputsize, outputsize) * np.sqrt(2 / inputsize)
-        elif activation == "tanh":
-            self.W = np.random.randn(inputsize, outputsize) * np.sqrt(1 / inputsize)
+        if activation == "tanh": #xavier
+            self.weight = np.random.randn(inputsize, outputsize) * np.sqrt(1 / inputsize)
+        elif activation == "relu": #he
+            self.weight = np.random.randn(inputsize, outputsize) * np.sqrt(2 / inputsize)
         else:
-            self.W = np.random.randn(inputsize, outputsize) * 0.01
+            self.weight = np.random.randn(inputsize, outputsize) * 0.01
 
-        self.b = np.zeros((1, outputsize))
-        self.grad_W = np.zeros_like(self.W)
-        self.grad_b = np.zeros_like(self.b)
-        self.velocity_W = np.zeros_like(self.W)
-        self.velocity_b = np.zeros_like(self.b)
+        self.bias = np.zeros((1, outputsize))
+        self.grad_weight = np.zeros_like(self.weight)
+        self.grad_bias = np.zeros_like(self.bias)
+        self.velocity_weight = np.zeros_like(self.weight)
+        self.velocity_bias = np.zeros_like(self.bias)
 
     def forward(self, input):
         self.input = input
-        return np.dot(input, self.W) + self.b
+        return np.dot(input, self.weight) + self.bias
 
     def backward(self, gradient):
-        self.grad_W = np.dot(self.input.T, gradient)
-        self.grad_b = np.sum(gradient, axis=0, keepdims=True)
-        return np.dot(gradient, self.W.T)
+        self.grad_weight = np.dot(self.input.T, gradient)
+        self.grad_bias = np.sum(gradient, axis=0, keepdims=True)
+        return np.dot(gradient, self.weight.T)
 
     def updateweights(self, learning_rate, momentum=0):
-        self.velocity_W = momentum * self.velocity_W - learning_rate * self.grad_W
-        self.velocity_b = momentum * self.velocity_b - learning_rate * self.grad_b
-        self.W += self.velocity_W
-        self.b += self.velocity_b
+        self.velocity_weight = momentum * self.velocity_weight - learning_rate * self.grad_weight
+        self.velocity_bias = momentum * self.velocity_bias - learning_rate * self.grad_bias
+        self.weight += self.velocity_weight
+        self.bias += self.velocity_bias
 
 
     
@@ -238,6 +238,7 @@ while True:
             for momentum in test_config["momentum_list"]:
                 print(f"{"-"*100}")
                 print(f"Zvoleny {problem_name} problem => aktivacna funkcia = {activation}, rychlost ucenia = {lr}, momentum = {momentum} ~")
+                
                 model = add_layers(hidden_layers=1, hidden_size=4, activation=activation)
                 losses=train_network(problem_name, X, y, model, lr, epochs, momentum)
                 visual(rows, columns, plt_id, activation, lr, momentum, losses)
