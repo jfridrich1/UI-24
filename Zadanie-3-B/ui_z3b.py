@@ -101,7 +101,6 @@ def train_with_optimizers(name, optimizer, model, train_loader, test_loader, cri
         test_losses.append(epoch_test_loss / len(test_loader))
         print(f"Epoch {epoch+1}/{epochs}, Train Loss: {train_losses[-1]:.4f}, Test Loss: {test_losses[-1]:.4f}")
 
-    #results = {"train_losses": train_losses, "test_losses": test_losses}
     results[name] = {"train_losses": train_losses, "test_losses": test_losses}
 
     return results
