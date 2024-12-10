@@ -119,41 +119,37 @@ def visual(results, epochs):
     plt.show()
 
 while True:
-    main_select=int(input("Zadajte ulohu na vypracovanie:\n1 - Poduloha\n2 - Backpropagation\nIne - Koniec\n>:"))
     print(f"{"-"*100}")
-    if main_select==1:
-        program_select=int(input("Zadanie metody trenovania\n1 - SDG\n2 - SDG s momentom\n3 - ADAM\n>:"))
+    program_select=int(input("Zadanie metody trenovania\n1 - SDG\n2 - SDG s momentom\n3 - ADAM\n>:"))
 
-        epochs=input("Pocet epochov (default = 20):") or 20
-        epochs=int(epochs)
+    epochs=input("Pocet epochov (default = 20):") or 20
+    epochs=int(epochs)
 
-        batch_size=input("Batch size (default = 16):") or 16
-        batch_size=int(batch_size)
+    batch_size=input("Batch size (default = 16):") or 16
+    batch_size=int(batch_size)
+    print(f"{"-"*100}")
 
-        criterion = nn.MSELoss()
-        train_loader, test_loader=preparation(batch_size)
+    criterion = nn.MSELoss()
+    train_loader, test_loader=preparation(batch_size)
 
-        if program_select==1:
-            opt_name="SGD"
-            model=HousingModel()
-            optimizer=optim.SGD(model.parameters(), lr=0.01)
+    if program_select==1:
+        opt_name="SGD"
+        model=HousingModel()
+        optimizer=optim.SGD(model.parameters(), lr=0.01)
 
-        elif program_select==2:
-            opt_name="SGD s momentom"
-            model=HousingModel()
-            optimizer=optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
+    elif program_select==2:
+        opt_name="SGD s momentom"
+        model=HousingModel()
+        optimizer=optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
 
-        elif program_select==3:
-            opt_name="ADAM"
-            model=HousingModel()
-            optimizer= optim.Adam(model.parameters(), lr=0.001)
-
-        results= train_with_optimizers(opt_name, optimizer, model, train_loader, test_loader, criterion, epochs)
-        visual(results, epochs)
-        print(f"{"-"*100}")
-
-    elif main_select==2:
-        print("BACKPROPAGATION")
-        exit()
+    elif program_select==3:
+        opt_name="ADAM"
+        model=HousingModel()
+        optimizer= optim.Adam(model.parameters(), lr=0.001)
+    
     else:
-        print("Ukoncenie programu!"),exit()
+        print("Ukoncenie programu"),exit()
+
+    results= train_with_optimizers(opt_name, optimizer, model, train_loader, test_loader, criterion, epochs)
+    visual(results, epochs)
+    print(f"{"-"*100}")
